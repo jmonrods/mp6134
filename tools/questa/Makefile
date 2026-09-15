@@ -28,6 +28,21 @@ gaussian: clean
 	vlog -sv $(PROJECT_ROOT)/examples/dist_gaussian.sv
 	vsim -c work.dist_gaussian -do "run -all; quit -f;"
 
+# tstudent
+tstudent: clean
+	source $(PROJECT_ROOT)/tools/questa/setup.sh
+	vlib work
+	vmap work work
+	vlog -sv $(PROJECT_ROOT)/examples/dist_t_student.sv
+	vsim -c work.dist_t_student -do "run -all; quit -f;"
+
+# chisquare
+chisquare: clean
+	source $(PROJECT_ROOT)/tools/questa/setup.sh
+	vlib work
+	vmap work work
+	vlog -sv $(PROJECT_ROOT)/examples/dist_chi_square.sv
+	vsim -c work.dist_chi_square -do "run -all; quit -f;"
 
 # clean: removes output files
 clean:
