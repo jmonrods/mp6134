@@ -19,7 +19,16 @@ sudoku: clean
 	vmap work work
 	vlog -sv $(PROJECT_ROOT)/examples/sudoku_solver.sv
 	vsim -c work.sudoku_solver -do "run -all; quit -f;"
-	
+
+# gaussian
+gaussian: clean
+	source $(PROJECT_ROOT)/tools/questa/setup.sh
+	vlib work
+	vmap work work
+	vlog -sv $(PROJECT_ROOT)/examples/dist_gaussian.sv
+	vsim -c work.dist_gaussian -do "run -all; quit -f;"
+
+
 # clean: removes output files
 clean:
 	rm ./vsim.wlf -f
