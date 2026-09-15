@@ -11,6 +11,14 @@ cpu: clean
 	vmap work work
 	vlog -sv $(RTL)/cpu_tb.sv $(RTL)/cpu.sv $(RTL)/alu.sv
 	vsim -c work.cpu_tb -do "run -all; quit -f;"
+
+# sudoku
+sudoku: clean
+	source $(PROJECT_ROOT)/tools/questa/setup.sh
+	vlib work
+	vmap work work
+	vlog -sv $(PROJECT_ROOT)/examples/sudoku_solver.sv
+	vsim -c work.sudoku_solver -do "run -all; quit -f;"
 	
 # clean: removes output files
 clean:
@@ -21,4 +29,5 @@ clean:
 	rm ./coverage.txt -f
 	rm ./work/ -rf
 	rm ./transcript -f
+
 
