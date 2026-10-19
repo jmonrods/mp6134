@@ -1,22 +1,15 @@
-# alu_compare.tcl
+# vc_formal.tcl - FPV Flow via a Top-Level Wrapper
+set_app_var fml_mode_on true
+set_fml_appmode FPV
 
-# Reference: behavioral ALU
-proc compile_spec {} {
-    create_design -name spec -top alu_behavioral -lang sverilog
-    vcs -sverilog ../../rtl/alu_behavioral.sv
-    compile_design spec
-}
+# Read a top-level formal harness/wrapper that instantiates both ALUs
+read_file -sva -format sverilog -top alu_tb_top -vcs {../../rtl/alu_behavioral.sv ../../rtl/alu.sv ../../rtl/alu_tb_top.sv}
 
-# Implementation: RTL ALU
-proc compile_impl {} {
-    create_design -name impl -top alu -lang sverilog
-    vcs -sverilog ../../rtl/alu.sv
-    compile_design impl
-}
+# Set up clock and reset (modify signal names to match your design)
+create_clock -period 10 clk
+create_reset -sense high rst
 
-# Compose and prove
-compile_spec
-compile_impl
-compose
-solveNB alu_equiv
-listproof
+# Run formal proof engines
+check_fv
+report_fv
+

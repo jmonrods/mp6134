@@ -1,3 +1,15 @@
 modelsim.ini
 transcript
 work/
+vcst_rtdb/
+vcst_rtdb.bak/
+*.log
+*.conf
+*.rc
+*.bak
+*.gz
+*.ses*
+*.bat
+.diagnose.oneSearch
+verdi.cmd
+view_trace.fsdb.list

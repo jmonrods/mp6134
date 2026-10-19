@@ -8,7 +8,7 @@ UVM := $(PROJECT_ROOT)/uvm
 vc_formal:
 	source $(PROJECT_ROOT)/tools/vc_formal/setup.sh
 	mkdir -p work
-	vcf -fmode DPV -f vc_formal.tcl
+	vcf -verdi -f vc_formal.tcl
 
 
 clean:
