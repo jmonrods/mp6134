@@ -13,3 +13,4 @@ vcst_rtdb.bak/
 .diagnose.oneSearch
 verdi.cmd
 view_trace.fsdb.list
+verdiLog/
