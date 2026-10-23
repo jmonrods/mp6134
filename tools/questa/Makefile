@@ -39,6 +39,21 @@ cpu_tutorial02: clean
 	vsim -sv_seed random -c top_optimized -coverage -do "set NoQuitOnFinish 1; onbreak {resume}; log /* -r; run -all; coverage save -onexit coverage.ucdb; quit;"
 	#vcover report coverage.ucdb
 
+# Tutorial 03: cpu with UVM
+cpu_tutorial03: clean
+	source $(PROJECT_ROOT)/tools/questa/setup.sh
+	vlib work
+	vmap work work
+	vlog -sv \
+		$(PROJECT_ROOT)/03-uvm/cpu/cpu.sv \
+		$(PROJECT_ROOT)/03-uvm/cpu/alu.sv \
+		$(PROJECT_ROOT)/03-uvm/uvm_tb/cpu_pkg.sv \
+		$(PROJECT_ROOT)/03-uvm/uvm_tb/cpu_bfm.sv \
+		$(PROJECT_ROOT)/03-uvm/top.sv \
+		+incdir+$(PROJECT_ROOT)/03-uvm/uvm_tb
+	vopt top -o top_optimized +cover=sbfec+cpu
+	vsim -c +UVM_TESTNAME="random_test" top_optimized -coverage -do "set NoQuitOnFinish 1; onbreak {resume}; log /* -r; run -all; coverage save -onexit coverage.ucdb; quit;"
+	vcover report coverage.ucdb
 
 # sudoku
 sudoku: clean
