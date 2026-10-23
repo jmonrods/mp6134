@@ -9,9 +9,9 @@
 module cpu (
     input clk,
     input rst,
-    input  [31:0] Instr,
-    output [31:0] Result,
-    output [31:0] PC
+    input        [31:0] Instr,
+    output logic [31:0] PC,
+    output logic [31:0] Result
 );
 
     // Bus signals
@@ -182,7 +182,6 @@ module register_bank (
     always_ff @(posedge clk) begin
         if (rst) for (i = 0; i<32; i++) mem[i] <= 0;
 	else if (WE3) mem[A3] <= WD3;
-    mem[2] = 32'h7ffffff0;
     end
 
     // read logic
@@ -207,20 +206,16 @@ module dmem (
     // associative array: dynamic memory
     logic [31:0] mem [logic [31:0]];
 
-    // reset logic
-    always_ff @(posedge rst) begin
-        mem.delete();
-    end
-
     // write logic
     always_ff @(posedge clk) begin
-        if (!rst & WE) mem[A] = WD;
+        if (rst) mem.delete();
+	else if (WE) mem[A] = WD;
     end
 
     // read logic
-    always_comb begin
+    always_ff @(posedge clk) begin
         if (RE & !rst) RD = mem[A];
-        else RD = 32'hDEADBEEF;
+        else           RD = 32'hDEADBEEF;
     end
 
 endmodule
@@ -240,7 +235,7 @@ module Extend (
             2'b01:   Q = {{20{A[31]}}, A[31:25], A[11:7]};                   // S-Type
             2'b10:   Q = {{19{A[31]}}, A[31], A[7],A[30:25], A[11:8], 1'b0}; // B-Type
             2'b11:   Q = {{12{A[31]}}, A[19:12], A[20], A[30:21], 1'b0};     // J-Type
-            //default: Q = 32'hDEADBEEF; // error
+            default: Q = 32'hDEADBEEF; // error
         endcase
 
     end
@@ -376,7 +371,7 @@ module control_unit (
             begin
                 ALUOp     = 2'b00;
                 Branch    = 1'b0;
-                ResultSrc = 1'b0;
+                ResultSrc = 2'b00;
                 MemWrite  = 1'b0;
                 ALUSrc    = 1'b0;
                 ImmSrc    = 2'b00;
@@ -393,16 +388,16 @@ module control_unit (
 
     always_comb begin
 
-        casex ({ALUOp,funct3,op[5],funct7_bit5})
-            7'b00xxxxx: ALUControl = 3'b000; // lw, sw
-            7'b01xxxxx: ALUControl = 3'b001; // beq
+        casez ({ALUOp,funct3,op[5],funct7_bit5})
+            7'b00?????: ALUControl = 3'b000; // lw, sw
+            7'b01?????: ALUControl = 3'b001; // beq
             7'b1000000: ALUControl = 3'b000; // add
             7'b1000001: ALUControl = 3'b000; // add
             7'b1000010: ALUControl = 3'b000; // add
             7'b1000011: ALUControl = 3'b001; // sub
-            7'b10010xx: ALUControl = 3'b101; // slt
-            7'b10110xx: ALUControl = 3'b011; // or
-            7'b10111xx: ALUControl = 3'b010; // and
+            7'b10010??: ALUControl = 3'b101; // slt
+            7'b10110??: ALUControl = 3'b011; // or
+            7'b10111??: ALUControl = 3'b010; // and
             default:    ALUControl = 3'b000;
         endcase
 

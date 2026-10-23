@@ -14,3 +14,5 @@ vcst_rtdb.bak/
 verdi.cmd
 view_trace.fsdb.list
 verdiLog/
+coverage.ucdb
+vsim.wlf
