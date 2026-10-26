@@ -18,58 +18,61 @@ module cpu_behavioral (
     logic [2:0]  funct3;
     logic [6:0]  funct7;
 
+    assign rd  = Instr[11:7];
+    assign rs1 = Instr[19:15];
+    assign rs2 = Instr[24:20];
+    assign imm = Instr[31:20];
+    assign opcode = Instr[6:0];
+    assign funct3 = Instr[14:12];
+    assign funct7 = Instr[31:25];
+
     typedef enum {ADDI, ADD, SUB, AND, OR, SLT} op_e;
 
     op_e operation;
+    int i;
     
 
     always @ (posedge clk) begin
 
-        if(!rst) begin
-            int i;
-            for (i=0; i<32; i++) register_bank[i] = 0;
+        if (!rst) begin
+            for (i=0; i<32; i++) register_bank[i] <= 0;
             PC <= 32'h00400000;
+        end else begin
+
+            case (opcode)
+                7'b0110011: // r-type 
+                begin
+                    case (funct3)
+                        3'b000: 
+                        begin
+                            if (funct7[5] == 0) operation = ADD;
+                            else operation = SUB;
+                        end
+                        3'b010: operation = SLT;
+                        3'b110: operation = OR;
+                        3'b111: operation = AND;
+                    endcase
+                end
+                7'b0010011: // i-type
+                begin
+                    operation = ADDI;
+                end
+            endcase
+
+            case(operation)
+                ADD:  register_bank[rd] <= (rd == 5'b00000) ? 0 : register_bank[rs1] + register_bank[rs2];
+                SUB:  register_bank[rd] <= (rd == 5'b00000) ? 0 : register_bank[rs1] - register_bank[rs2];
+                AND:  register_bank[rd] <= (rd == 5'b00000) ? 0 : register_bank[rs1] & register_bank[rs2];
+                OR:   register_bank[rd] <= (rd == 5'b00000) ? 0 : register_bank[rs1] | register_bank[rs2];
+                SLT:  register_bank[rd] <= (rd == 5'b00000) ? 0 : ($signed(register_bank[rs1]) < $signed(register_bank[rs2])) ? 32'hFFFFFFFF : 32'h00000000;
+                ADDI: register_bank[rd] <= (rd == 5'b00000) ? 0 : register_bank[rs1] + {{20{imm[11]}},imm};
+            endcase
+            
+            Result <= register_bank[rd];
+            PC <= PC + 4;
+
         end
-        
-        PC <= PC + 4;           // This probably will fail, because the DUT has implemented the beq instruction, the ref model doesn't yet.
-
-        rd  = Instr[11:7];
-        rs1 = Instr[19:15];
-        rs2 = Instr[24:20];
-        imm = Instr[31:20];
-        opcode = Instr[6:0];
-        funct3 = Instr[14:12];
-        funct7 = Instr[31:25];
-
-        case (opcode)
-            7'b0110011: // r-type 
-            begin
-                case (funct3)
-                    3'b000: 
-                    begin
-                        if (funct7[5] == 0) operation = ADD;
-                        else operation = SUB;
-                    end
-                    3'b010: operation = SLT;
-                    3'b110: operation = OR;
-                    3'b111: operation = AND;
-                endcase
-            end
-            7'b0010011: // i-type
-            begin
-                operation = ADDI;
-            end
-        endcase
-
-        case(operation)
-            ADD:  Result <= register_bank[rs1] + register_bank[rs2];
-            SUB:  Result <= register_bank[rs1] - register_bank[rs2];
-            AND:  Result <= register_bank[rs1] & register_bank[rs2];
-            OR:   Result <= register_bank[rs1] | register_bank[rs2];
-            SLT:  Result <= ($signed(register_bank[rs1]) < $signed(register_bank[rs2])) ? 32'hFFFFFFFF : 32'h00000000;
-            ADDI: Result <= register_bank[rs1] + {{20{imm[11]}},imm};
-        endcase
-
+    
     end
     
 endmodule

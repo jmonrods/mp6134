@@ -8,7 +8,7 @@ module cpu_tb_top (
     input logic [11:0] imm
 );
 
-    // ToDo: Fix the instruction generation constraints, there are no valid instructions yet
+    // ToDo: Fix the reset logic on the reference model, it's not working properly
     // ToDo: Data memory needs to be external, since associative arrays are non-synthesizable
 
     // Outputs from reference behavioral model
@@ -32,11 +32,6 @@ module cpu_tb_top (
     // Formal Assertions: Check that outputs match identically
     always_ff @(posedge clk) begin
 
-        rd.randomize();
-        rs1.randomize();
-        rs2.randomize();
-        imm.randomize();
-
         assume property (
             (Instr == {7'b0000000,rs2,rs1,3'b000,rd,7'b0110011}) || // R-type ADD
             (Instr == {7'b0100000,rs2,rs1,3'b000,rd,7'b0110011}) || // R-type SUB
@@ -47,10 +42,10 @@ module cpu_tb_top (
         );
 
         if (!rst) begin
-            assert_output_match: assert (out_impl == out_spec)
+            assert_output_match: assert property (out_impl == out_spec)
                 else $error("Mismatch: RTL out = %0h, Behavioral out = %0h", out_impl, out_spec);
                 
-            assert_zero_match: assert (PC_impl == PC_spec)
+            assert_pc_match: assert property (PC_impl == PC_spec)
                 else $error("Mismatch: RTL PC = %0b, Behavioral PC = %0b", PC_impl, PC_spec);
         end
     end
