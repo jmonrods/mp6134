@@ -9,31 +9,23 @@ module tb_fifo_assertions;
     logic [7:0] data_in;
     logic [7:0] data_out;
 
-    logic [3:0] fifo_count;
-
-    // Instantiate assertion module
-    fifo_assertions dut_assertions (
-        .*
+    // Instantiate the actual FIFO memory Design Under Test (DUT)
+    fifo dut_fifo (
+        .clk(clk),
+        .rst_n(rst_n),
+        .wr_en(wr_en),
+        .rd_en(rd_en),
+        .full(full),
+        .empty(empty),
+        .data_in(data_in),
+        .data_out(data_out)
     );
 
-    // Clock generation: 10 time units period
+    // Instantiate the assertion checker module
+    bind dut_fifo fifo_assertions fifo_checker_inst (.*);
+
+    // Clock generation
     always #5 clk = ~clk;
-
-    // Simple FIFO counter model
-    always_ff @(posedge clk or negedge rst_n) begin
-        if (!rst_n) begin
-            fifo_count <= 0;
-        end else begin
-            case ({wr_en && !full, rd_en && !empty})
-                2'b10: fifo_count <= fifo_count + 1; // Write only
-                2'b01: fifo_count <= fifo_count - 1; // Read only
-                default: fifo_count <= fifo_count;   // No-op or simultaneous
-            endcase
-        end
-    end
-
-    assign empty = (fifo_count == 0);
-    assign full  = (fifo_count == 8);
 
     // Stimulus process
     initial begin
@@ -60,8 +52,6 @@ module tb_fifo_assertions;
         @(posedge clk);
         wr_en = 0;
 
-        repeat (25) @(posedge clk);
-
         repeat (3) begin
             @(posedge clk);
             rd_en = 1;
@@ -74,7 +64,7 @@ module tb_fifo_assertions;
         // ---------------------------------------------------------
         // Scenario 2: Trigger Empty-Read Error
         // ---------------------------------------------------------
-        // FIFO is now guaranteed empty, so this won't hang
+        // FIFO is empty
         wait(empty);
         @(posedge clk);
         rd_en = 1; // Attempt read on empty FIFO
@@ -100,7 +90,43 @@ module tb_fifo_assertions;
         @(posedge clk);
         wr_en = 0;
 
-        #20;
+        @(posedge clk);
+
+        // ---------------------------------------------------------
+        // Scenario 4: Written data not read within 20 cycles
+        // ---------------------------------------------------------
+
+        // First we empty the FIFO
+        repeat (8) begin
+            @(posedge clk);
+            wr_en   = 0;
+            rd_en   = 1;
+        end
+        
+        // Then we write 3 new entries
+        repeat (3) begin
+            @(posedge clk);
+            wr_en   = 1;
+            rd_en   = 0;
+            data_in = data_in + 8'h11;
+        end
+        
+        @(posedge clk);
+        wr_en = 0;
+
+        // Wait for 25 cycles without reading
+        repeat (25) @(posedge clk); 
+
+        // Read 3 entries to clear the FIFO
+        repeat (3) begin
+            @(posedge clk);
+            rd_en = 1;
+        end
+
+        @(posedge clk);
+        rd_en = 0;
+        @(posedge clk);
+
         $finish;
     end
 

@@ -87,6 +87,11 @@ chisquare: clean
 	vlog -sv $(PROJECT_ROOT)/examples/dist_chi_square.sv
 	vsim -c work.dist_chi_square -do "run -all; quit -f;"
 
+fifo_assertions: clean
+	vlib work
+	vlog -sv $(PROJECT_ROOT)/05-sva/fifo_assertions.sv $(PROJECT_ROOT)/05-sva/tb_fifo_assertions.sv $(PROJECT_ROOT)/05-sva/fifo.sv
+	vsim -c tb_fifo_assertions -do "run -all; exit"
+
 # clean: removes output files
 clean:
 	rm ./vsim.wlf -f
